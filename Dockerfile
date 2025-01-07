@@ -60,6 +60,16 @@ RUN mkdir target && mv ruoyi-admin/target/ruoyi-admin.jar target/app.jar
 
 ################################################################################
 
+FROM package as development
+WORKDIR /build
+RUN mkdir /home/ruoyi
+RUN mkdir /home/ruoyi/logs
+RUN mkdir /home/ruoyi/uploadPath
+COPY --from=package build/target/app.jar app.jar
+CMD [ "java", "-Dserver.port=8000", "-jar", "app.jar" ]
+
+################################################################################
+
 # Create a new stage for running the application that contains the minimal # runtime dependencies for the application. This often uses a different base
 # image from the install or build stage where the necessary files are copied
 # from the install stage.

@@ -19,9 +19,14 @@ services:
   backend:
     build:
       context: .
+      target: development
+    develop:
+      watch:
+        - action: rebuild
+          path: .
     labels:
       traefik.http.routers.backend.rule: "Host(`localhost`) && PathPrefix(`/prod-api`)"
-      traefik.http.services.backend.loadbalancer.server.port: 8080
+      traefik.http.services.backend.loadbalancer.server.port: 8000
 
   frontend:
     image: ruoyi-vue3:latest
