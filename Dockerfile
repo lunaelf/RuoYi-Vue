@@ -8,14 +8,39 @@
 
 ################################################################################
 
-# Create a stage for resolving and downloading dependencies.
-FROM eclipse-temurin:17-jdk-jammy as deps
+FROM eclipse-temurin:17-jdk-jammy as base
+WORKDIR /build
+COPY --chmod=0755 mvnw mvnw
+COPY .mvn/ .mvn/
+
+################################################################################
+
+FROM base as test
 
 WORKDIR /build
 
-# Copy the mvnw wrapper with executable permissions.
-COPY --chmod=0755 mvnw mvnw
-COPY .mvn/ .mvn/
+COPY ./ruoyi-admin/src ruoyi-admin/src/
+COPY ./ruoyi-framework/src ruoyi-framework/src/
+COPY ./ruoyi-system/src ruoyi-system/src/
+COPY ./ruoyi-quartz/src ruoyi-quartz/src/
+COPY ./ruoyi-generator/src ruoyi-generator/src/
+COPY ./ruoyi-common/src ruoyi-common/src/
+RUN --mount=type=bind,source=pom.xml,target=pom.xml \
+    --mount=type=bind,source=ruoyi-admin/pom.xml,target=ruoyi-admin/pom.xml \
+    --mount=type=bind,source=ruoyi-framework/pom.xml,target=ruoyi-framework/pom.xml \
+    --mount=type=bind,source=ruoyi-system/pom.xml,target=ruoyi-system/pom.xml \
+    --mount=type=bind,source=ruoyi-quartz/pom.xml,target=ruoyi-quartz/pom.xml \
+    --mount=type=bind,source=ruoyi-generator/pom.xml,target=ruoyi-generator/pom.xml \
+    --mount=type=bind,source=ruoyi-common/pom.xml,target=ruoyi-common/pom.xml \
+    --mount=type=cache,target=/root/.m2 \
+    ./mvnw test
+
+################################################################################
+
+# Create a stage for resolving and downloading dependencies.
+FROM base as deps
+
+WORKDIR /build
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.m2 so that subsequent builds don't have to
@@ -27,7 +52,8 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
     --mount=type=bind,source=ruoyi-quartz/pom.xml,target=ruoyi-quartz/pom.xml \
     --mount=type=bind,source=ruoyi-generator/pom.xml,target=ruoyi-generator/pom.xml \
     --mount=type=bind,source=ruoyi-common/pom.xml,target=ruoyi-common/pom.xml \
-    --mount=type=cache,target=/root/.m2 ./mvnw dependency:go-offline -DskipTests
+    --mount=type=cache,target=/root/.m2 \
+    ./mvnw dependency:go-offline -DskipTests
 
 ################################################################################
 
@@ -61,11 +87,15 @@ RUN mkdir target && mv ruoyi-admin/target/ruoyi-admin.jar target/app.jar
 ################################################################################
 
 FROM package as development
+
 WORKDIR /build
+
 RUN mkdir /home/ruoyi
 RUN mkdir /home/ruoyi/logs
 RUN mkdir /home/ruoyi/uploadPath
+
 COPY --from=package build/target/app.jar app.jar
+
 CMD [ "java", "-Dserver.port=8000", "-jar", "app.jar" ]
 
 ################################################################################
