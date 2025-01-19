@@ -11,8 +11,9 @@ on:
       - "containerize"
 
 env:
-  DOCKER_REGISTRY: crpi-9t66pyx5tr44wo4w.cn-shanghai.personal.cr.aliyuncs.com
-  DOCKER_REPOSITORY_NAME: ruoyi-vue
+  DOCKER_REGISTRY_HOST: crpi-9t66pyx5tr44wo4w.cn-shanghai.personal.cr.aliyuncs.com
+  DOCKER_REGISTRY_NAMESPACE: lunaelf
+  DOCKER_REGISTRY_REPOSITORY: ruoyi-vue
   BACKEND_NAME: backend
   BACKEND_PORT: 8080
 
@@ -29,7 +30,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.DOCKER_REGISTRY }}/${{ vars.DOCKER_REGISTRY_USERNAME }}/${{ env.DOCKER_REPOSITORY_NAME }}
+            ${{ env.DOCKER_REGISTRY_HOST }}/${{ env.DOCKER_REGISTRY_NAMESPACE }}/${{ env.DOCKER_REGISTRY_REPOSITORY }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -41,7 +42,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.DOCKER_REGISTRY }}
+          registry: ${{ env.DOCKER_REGISTRY_HOST }}
           username: ${{ vars.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
       - name: Set up Docker Buildx
@@ -88,8 +89,9 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "${{ secrets.DOCKER_REGISTRY_PASSWORD }}" | docker login --username ${{ vars.DOCKER_REGISTRY_USERNAME }} --password-stdin ${{ env.DOCKER_REGISTRY }}
-            docker pull ${{ env.DOCKER_REGISTRY }}/${{ vars.DOCKER_REGISTRY_USERNAME }}/${{ vars.DOCKER_REPOSITORY_NAME }}:${{ steps.extract_tag.outputs.tag }}
+            echo "${{ secrets.DOCKER_REGISTRY_PASSWORD }}" | docker login --username ${{ vars.DOCKER_REGISTRY_USERNAME }} --password-stdin ${{ env.DOCKER_REGISTRY_HOST }}
+            IMAGE_NAME="${{ env.DOCKER_REGISTRY_HOST }}/${{ env.DOCKER_REGISTRY_NAMESPACE }}/${{ env.DOCKER_REGISTRY_REPOSITORY }}:${{ steps.extract_tag.outputs.tag }}"
+            docker pull $IMAGE_NAME
             if [ "$(docker inspect -f '{{.State.Running}}' ${{ env.BACKEND_NAME }})" = 'true' ]; then
               docker rm -f ${{ env.BACKEND_NAME }}
             fi
@@ -99,4 +101,4 @@ jobs:
               --label "traefik.http.routers.${{ env.BACKEND_NAME }}.rule=Host(\`${{ secrets.SSH_HOST }}\`) && PathPrefix(\`/prod-api\`)" \
               --label "traefik.http.services.${{ env.BACKEND_NAME }}.loadbalancer.server.port=${{ env.BACKEND_PORT }}" \
               --network traefik-network \
-              ${{ env.DOCKER_REGISTRY }}/${{ vars.DOCKER_REGISTRY_USERNAME }}/${{ env.DOCKER_REPOSITORY_NAME }}:${{ steps.extract_tag.outputs.tag }}
+              $IMAGE_NAME
