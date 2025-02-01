@@ -9,7 +9,7 @@
 # https://github.com/docker/awesome-compose
 services:
   proxy:
-    image: traefik:v3.1.2
+    image: traefik:v3.3
     command: --providers.docker
     ports:
       - 80:80
@@ -24,6 +24,8 @@ services:
       watch:
         - action: rebuild
           path: .
+    env_file:
+      - .env
     labels:
       traefik.http.routers.backend.rule: "Host(`localhost`) && PathPrefix(`/prod-api`)"
       traefik.http.services.backend.loadbalancer.server.port: 8000

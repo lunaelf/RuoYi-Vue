@@ -97,6 +97,17 @@ jobs:
             fi
             docker run -d \
               --name ${{ env.BACKEND_NAME }} \
+              -e "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" \
+              -e "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" \
+              -e "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" \
+              -e "MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}" \
+              -e "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" \
+              -e "REDIS_HOST=${{ secrets.REDIS_HOST }}" \
+              -e "REDIS_PORT=${{ secrets.REDIS_PORT }}" \
+              -e "REDISL_DATABASE=${{ secrets.REDIS_DATABASE }}" \
+              -e "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" \
+              -v /etc/timezone:/etc/timezone:ro \
+              -v /etc/localtime:/etc/localtime:ro \
               --add-host=host.docker.internal:host-gateway \
               --label "traefik.http.routers.${{ env.BACKEND_NAME }}.rule=Host(\`${{ secrets.SSH_HOST }}\`) && PathPrefix(\`/prod-api\`)" \
               --label "traefik.http.services.${{ env.BACKEND_NAME }}.loadbalancer.server.port=${{ env.BACKEND_PORT }}" \
