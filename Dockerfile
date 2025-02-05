@@ -94,9 +94,7 @@ RUN mkdir /home/ruoyi
 RUN mkdir /home/ruoyi/logs
 RUN mkdir /home/ruoyi/uploadPath
 
-COPY --from=package build/target/app.jar app.jar
-
-CMD [ "java", "-Dserver.port=8000", "-jar", "app.jar" ]
+CMD [ "java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000", "-Dserver.port=8000", "-jar", "target/app.jar" ]
 
 ################################################################################
 
