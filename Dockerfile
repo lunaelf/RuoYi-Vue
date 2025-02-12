@@ -8,14 +8,16 @@
 
 ################################################################################
 
-FROM eclipse-temurin:17-jdk-jammy as base
+FROM eclipse-temurin:17-jdk-jammy AS base
+
 WORKDIR /build
+
 COPY --chmod=0755 mvnw mvnw
 COPY .mvn/ .mvn/
 
 ################################################################################
 
-FROM base as test
+FROM base AS test
 
 WORKDIR /build
 
@@ -38,7 +40,7 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
 ################################################################################
 
 # Create a stage for resolving and downloading dependencies.
-FROM base as deps
+FROM base AS deps
 
 WORKDIR /build
 
@@ -63,7 +65,7 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
 # jar and instead relies on an application server like Apache Tomcat, you'll need to update this
 # stage with the correct filename of your package and update the base image of the "final" stage
 # use the relevant app server, e.g., using tomcat (https://hub.docker.com/_/tomcat/) as a base image.
-FROM deps as package
+FROM deps AS package
 
 WORKDIR /build
 
@@ -86,7 +88,7 @@ RUN mkdir target && mv ruoyi-admin/target/ruoyi-admin.jar target/app.jar
 
 ################################################################################
 
-FROM package as development
+FROM package AS development
 
 WORKDIR /build
 
@@ -94,7 +96,7 @@ RUN mkdir /home/ruoyi
 RUN mkdir /home/ruoyi/logs
 RUN mkdir /home/ruoyi/uploadPath
 
-CMD [ "java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000", "-Dserver.port=8000", "-jar", "target/app.jar" ]
+CMD [ "java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000", "-jar", "target/app.jar" ]
 
 ################################################################################
 
@@ -121,7 +123,6 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
-USER root
 RUN mkdir /home/ruoyi && chown appuser:appuser /home/ruoyi
 RUN mkdir /home/ruoyi/logs && chown appuser:appuser /home/ruoyi/logs
 RUN mkdir /home/ruoyi/uploadPath && chown appuser:appuser /home/ruoyi/uploadPath

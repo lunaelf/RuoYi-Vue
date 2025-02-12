@@ -94,9 +94,12 @@ jobs:
             docker pull $IMAGE_NAME
             if [ "$(docker inspect -f '{{.State.Running}}' ${{ env.BACKEND_NAME }})" = 'true' ]; then
               docker rm -f ${{ env.BACKEND_NAME }}
+            elif [ "$(docker inspect -f '{{.State.Status}}' ${{ env.CONTAINER_NAME }})" = 'exited' ]; then
+              docker rm ${{ env.CONTAINER_NAME }}
             fi
             docker run -d \
               --name ${{ env.BACKEND_NAME }} \
+              -e "CONTEXT_PATH=${{ secrets.CONTEXT_PATH }}" \
               -e "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" \
               -e "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" \
               -e "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" \

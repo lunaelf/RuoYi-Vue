@@ -8,13 +8,17 @@
 # database or a cache. For examples, see the Awesome Compose repository:
 # https://github.com/docker/awesome-compose
 services:
-  proxy:
+  reverse-proxy:
     image: traefik:v3.2.5
     command: --providers.docker
     ports:
       - "80:80"
+    environment:
+      - TZ=Asia/Shanghai
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      #      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
   backend:
     build:
@@ -22,18 +26,28 @@ services:
       target: development
     ports:
       - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      #      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     develop:
       watch:
         - action: rebuild
           path: .
-    env_file:
-      - .env
     labels:
       traefik.http.routers.backend.rule: "Host(`localhost`) && PathPrefix(`/prod-api`)"
-      traefik.http.services.backend.loadbalancer.server.port: 8000
+      traefik.http.services.backend.loadbalancer.server.port: 8080
 
   frontend:
-    image: ruoyi-vue3:latest
+    image: ruoyi-vue3-frontend:latest
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      #      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     labels:
       traefik.http.routers.frontend.rule: "Host(`localhost`)"
       traefik.http.services.frontend.loadbalancer.server.port: 3000
