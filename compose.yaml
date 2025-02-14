@@ -50,4 +50,4 @@ services:
       - /etc/localtime:/etc/localtime:ro
     labels:
       traefik.http.routers.frontend.rule: "Host(`localhost`)"
-      traefik.http.services.frontend.loadbalancer.server.port: 3000
+      traefik.http.services.frontend.loadbalancer.server.port: 80
