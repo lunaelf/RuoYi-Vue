@@ -94,8 +94,8 @@ jobs:
             docker pull $IMAGE_NAME
             if [ "$(docker inspect -f '{{.State.Running}}' ${{ env.BACKEND_NAME }})" = 'true' ]; then
               docker rm -f ${{ env.BACKEND_NAME }}
-            elif [ "$(docker inspect -f '{{.State.Status}}' ${{ env.CONTAINER_NAME }})" = 'exited' ]; then
-              docker rm ${{ env.CONTAINER_NAME }}
+            elif [ "$(docker inspect -f '{{.State.Status}}' ${{ env.BACKEND_NAME }})" = 'exited' ]; then
+              docker rm ${{ env.BACKEND_NAME }}
             fi
             docker run -d \
               --name ${{ env.BACKEND_NAME }} \
