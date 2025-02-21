@@ -44,6 +44,7 @@ services:
   frontend:
     image: ruoyi-vue3-frontend:latest
     environment:
+      - NGINX_SERVER_NAME=localhost
       - TZ=Asia/Shanghai
     volumes:
       #      - /etc/timezone:/etc/timezone:ro
